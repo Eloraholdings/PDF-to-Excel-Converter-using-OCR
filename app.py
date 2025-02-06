@@ -12,11 +12,8 @@ OUTPUT_FOLDER = "output"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-# Set Poppler path (Update to your actual path)
-poppler_path = r"C:\poppler-24.08.0\Library\bin"
-
-# Set Tesseract path (Windows users only)
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Ensure Tesseract is installed and accessible in Linux
+pytesseract.pytesseract.tesseract_cmd = "tesseract"  # Linux default
 
 def pdf_to_excel(pdf_path, excel_path):
     extracted_data = []
@@ -29,10 +26,11 @@ def pdf_to_excel(pdf_path, excel_path):
                     extracted_data.extend(table)
             else:
                 # If no tables detected, fall back to OCR
-                image = convert_from_path(pdf_path, poppler_path=poppler_path)[0]
-                text = pytesseract.image_to_string(image, config="--psm 6")
-                lines = [line.split() for line in text.split("\n") if line.strip()]
-                extracted_data.extend(lines)
+                images = convert_from_path(pdf_path)  # No poppler_path needed
+                for image in images:
+                    text = pytesseract.image_to_string(image, config="--psm 6")
+                    lines = [line.split() for line in text.split("\n") if line.strip()]
+                    extracted_data.extend(lines)
 
     # Convert extracted data to DataFrame and save as Excel
     df = pd.DataFrame(extracted_data)
@@ -60,3 +58,4 @@ def index():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
